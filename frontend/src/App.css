@@ -1,0 +1,81 @@
+
+.app {
+  min-height: 100vh;
+  background: #f3f6fa;
+  color: #172b4d;
+}
+
+.cabecalho {
+  background: #102b46;
+  color: white;
+  padding: 24px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cabecalho h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 3px;
+}
+
+.cabecalho p {
+  margin: 5px 0 0;
+  color: #b9c9d9;
+}
+
+.status-sistema {
+  background: #1c4968;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.conteudo {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+.conteudo h2 {
+  font-size: 25px;
+}
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.cartao {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px #172b4d10;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cartao span {
+  color: #718096;
+}
+
+.cartao strong {
+  font-size: 30px;
+  color: #147d9b;
+}
+
+@media (max-width: 650px) {
+  .cartoes {
+    grid-template-columns: 1fr;
+  }
+
+  .cabecalho {
+    align-items: flex-start;
+    gap: 15px;
+    flex-direction: column;
+  }
+}
