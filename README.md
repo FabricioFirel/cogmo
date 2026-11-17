@@ -134,3 +134,4 @@ Com o servidor rodando:
 ## Repositório
 
 [github.com/FabricioFirel/cogmo](https://github.com/FabricioFirel/cogmo)
+Atualização de acompanhamento e organização do projeto COGMO.
