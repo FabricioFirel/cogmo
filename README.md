@@ -134,3 +134,4 @@ Com o servidor rodando:
 ## Repositório
 
 [github.com/FabricioFirel/cogmo](https://github.com/FabricioFirel/cogmo)
+Projeto COGMO - Ambiente local configurado.
