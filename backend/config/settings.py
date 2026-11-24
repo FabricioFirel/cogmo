@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-u^tb8t-@9e!ilrl_zpa_oexg&i7#@prdl23t)2fldr#-ba)c3c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -122,8 +122,35 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
-REST_FRAMEWORK = {"DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema"}
+# O front roda no Vite, em outra porta, por isso precisa ser liberado aqui.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # A API so faz leitura, entao nao exige login.
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    "UNAUTHENTICATED_USER": None,
+    # Toda data sai em UTC, no formato ISO 8601 terminando em Z.
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API de Monitoramento Hidrológico (COGMO)",
+    "DESCRIPTION": (
+        "Dados SINTÉTICOS de estações fictícias, gerados por script. "
+        "Não use estas informações para fins operacionais, alertas ou "
+        "decisões reais.\n\n"
+        "Os horários são devolvidos em UTC, no formato ISO 8601 terminando em Z. "
+        "Leitura inválida vem como `null`, nunca omitida."
+    ),
+    "VERSION": "1.0.0",
+    # O proprio endpoint do schema nao precisa aparecer na documentacao.
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 
 # Email
