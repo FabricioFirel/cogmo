@@ -377,3 +377,41 @@
 .estado-botao:hover {
   background: #0f6279;
 }
+
+/* Ajustes dos cartões do painel */
+
+.cartoes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cartao {
+  min-width: 0;
+}
+
+.cartao span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cartao strong {
+  font-size: 28px;
+}
+
+/* Tablets */
+@media (max-width: 1000px) {
+  .cartoes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+  .cartoes {
+    grid-template-columns: 1fr;
+  }
+
+  .cartao {
+    padding: 22px;
+  }
+}

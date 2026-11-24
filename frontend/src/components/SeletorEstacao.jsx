@@ -21,11 +21,19 @@ export default function SeletorEstacao({
           Selecione uma estação
         </option>
 
-        {estacoes.map((estacao) => (
-          <option key={estacao.id} value={estacao.id}>
-            {estacao.name} — {estacao.city}/{estacao.state}
-          </option>
-        ))}
+        {estacoes.map((estacao) => {
+          const localizacao = [
+            estacao.city,
+            estacao.state
+          ].filter(Boolean).join('/')
+
+          return (
+            <option key={estacao.id} value={estacao.id}>
+              {estacao.name}
+              {localizacao ? ` — ${localizacao}` : ''}
+            </option>
+          )
+        })}
       </select>
     </div>
   )

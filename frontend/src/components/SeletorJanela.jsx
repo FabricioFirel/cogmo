@@ -1,9 +1,9 @@
 
 export default function SeletorJanela({
-  periodoSelecionado = 3,
+  periodoSelecionado = 12,
   aoAlterarPeriodo
 }) {
-  const periodos = [3, 12, 24]
+  const periodos = [12, 24, 48]
 
   return (
     <div className="seletor-janela">

@@ -1,10 +1,22 @@
 
 import { useState } from 'react'
+
 import ListaEstacoes from './components/ListaEstacoes'
 import Graficos from './components/Graficos'
 import SeletorJanela from './components/SeletorJanela'
 import SeletorEstacao from './components/SeletorEstacao'
-import { estacoes, resumoEstacao, serieEstacao } from './data/mockData'
+import Resumo from './components/Resumo'
+import { IconeEstacao } from './components/Icones'
+import { Vazio } from './components/Estados'
+
+import {
+  estacoes,
+  resumoEstacao,
+  serieEstacao,
+  resumoEstacaoSemDados,
+  serieEstacaoSemDados
+} from './data/mockData'
+
 import './App.css'
 
 function App() {
@@ -12,18 +24,41 @@ function App() {
     estacoes[0]?.id ?? ''
   )
 
-  const [periodoSelecionado, setPeriodoSelecionado] = useState(3)
+  const [periodoSelecionado, setPeriodoSelecionado] = useState(12)
 
-  // Os dados de exemplo pertencem somente à estação EST-001.
-  const possuiResumo =
-    estacaoSelecionada === resumoEstacao.station.id
+  const resumos = {
+    'EST-001': resumoEstacao,
+    'EST-005': resumoEstacaoSemDados
+  }
 
-  const possuiSerie =
-    estacaoSelecionada === serieEstacao.station_id &&
-    periodoSelecionado === serieEstacao.hours
+  const series = {
+    'EST-001': serieEstacao,
+    'EST-005': serieEstacaoSemDados
+  }
 
-  const resumoAtual = possuiResumo ? resumoEstacao : null
-  const leituras = possuiSerie ? serieEstacao.points : []
+  const resumoAtual = resumos[estacaoSelecionada] ?? null
+  const serieAtual = series[estacaoSelecionada] ?? null
+
+  const semLeituras = resumoAtual?.status === 'sem_dados'
+
+  const estacoesComStatus = estacoes.map((estacao) => ({
+    ...estacao,
+    status: resumos[estacao.id]?.status ?? 'sem_dados'
+  }))
+
+  // Mostra somente as leituras de exemplo existentes.
+  const leituras = serieAtual?.points?.filter((leitura) => {
+    const horario = new Date(leitura.observed_at).getTime()
+    const fim = new Date(serieAtual.end).getTime()
+
+    if (!Number.isFinite(horario) || !Number.isFinite(fim)) {
+      return false
+    }
+
+    const inicio = fim - periodoSelecionado * 60 * 60 * 1000
+
+    return horario >= inicio && horario <= fim
+  }) ?? []
 
   return (
     <main className="app">
@@ -40,38 +75,28 @@ function App() {
 
       <section className="conteudo">
         <h2>Painel de Monitoramento</h2>
+
         <p>
-          Acompanhe os níveis dos rios e os índices
-          de precipitação das estações.
+          Acompanhe os níveis dos rios e os índices de
+          precipitação das estações.
         </p>
 
+        {/* Quatro cartões no mesmo grupo */}
         <div className="cartoes">
           <article className="cartao">
-            <span>Estações monitoradas</span>
+            <span>
+              <IconeEstacao tamanho={22} cor="#0284a8" />
+              Estações monitoradas
+            </span>
+
             <strong>{estacoes.length}</strong>
           </article>
 
-          <article className="cartao">
-            <span>Nível do rio</span>
-            <strong>
-              {resumoAtual?.level_m?.value != null
-                ? `${resumoAtual.level_m.value.toFixed(2)} m`
-                : '—'}
-            </strong>
-          </article>
-
-          <article className="cartao">
-            <span>Precipitação</span>
-            <strong>
-              {resumoAtual?.rain_mm_h?.value != null
-                ? `${resumoAtual.rain_mm_h.value.toFixed(1)} mm/h`
-                : '—'}
-            </strong>
-          </article>
+          <Resumo resumo={resumoAtual} />
         </div>
 
         <ListaEstacoes
-          estacoes={estacoes}
+          estacoes={estacoesComStatus}
           estacaoSelecionada={estacaoSelecionada}
           aoSelecionar={setEstacaoSelecionada}
         />
@@ -87,14 +112,23 @@ function App() {
           aoAlterarPeriodo={setPeriodoSelecionado}
         />
 
-        {!possuiSerie && (
-          <p className="aviso-periodo">
-            Ainda não temos dados de exemplo para esta
-            estação no período selecionado.
-          </p>
-        )}
+        {semLeituras ? (
+          <Vazio
+            titulo="Sem leituras disponíveis"
+            texto="Esta estação ainda não possui registros de nível do rio ou precipitação."
+          />
+        ) : (
+          <>
+            {leituras.length > 0 && (
+              <p className="aviso-periodo">
+                Exibindo apenas as leituras de exemplo disponíveis.
+                O período completo ainda não possui dados.
+              </p>
+            )}
 
-        <Graficos leituras={leituras} />
+            <Graficos leituras={leituras} />
+          </>
+        )}
       </section>
     </main>
   )
