@@ -1,4 +1,6 @@
 
+/* Estrutura principal */
+
 .app {
   min-height: 100vh;
   background: #f3f6fa;
@@ -12,51 +14,62 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
 .cabecalho h1 {
   margin: 0;
-  font-size: 28px;
-  letter-spacing: 3px;
+  color: white;
+  letter-spacing: 2px;
+  font-size: 30px;
 }
 
 .cabecalho p {
-  margin: 5px 0 0;
-  color: #b9c9d9;
+  margin: 8px 0 0;
+  color: #e2e8f0;
 }
 
 .status-sistema {
-  background: #1c4968;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-size: 13px;
+  background: #195476;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 30px;
+  font-size: 12px;
 }
 
 .conteudo {
+  width: 90%;
   max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 24px;
+  margin: 0 auto;
+  padding: 40px 0 70px;
 }
 
-.conteudo h2 {
-  font-size: 25px;
+.conteudo > h2 {
+  color: #102c46;
+  margin: 0 0 24px;
 }
+
+.conteudo > p {
+  margin-bottom: 32px;
+}
+
+/* Cartões de indicadores */
 
 .cartoes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  margin-top: 30px;
+  margin-bottom: 34px;
 }
 
 .cartao {
-  background: white;
-  padding: 25px;
+  background: #ffffff;
+  padding: 28px 24px;
   border-radius: 12px;
-  box-shadow: 0 3px 12px #172b4d10;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .cartao span {
@@ -64,18 +77,233 @@
 }
 
 .cartao strong {
+  color: #087fa3;
   font-size: 30px;
-  color: #147d9b;
 }
 
-@media (max-width: 650px) {
+/* Lista de estações */
+
+.lista-estacoes {
+  background: #ffffff;
+  padding: 28px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.lista-estacoes h2 {
+  color: #102c46;
+  margin-top: 0;
+}
+
+.lista-estacoes p {
+  color: #718096;
+  margin: 24px 0;
+}
+
+.estacoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.estacao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 20px;
+  border: 2px solid #dfe7f0;
+  border-radius: 10px;
+  background: #f3f6fa;
+  cursor: pointer;
+  text-align: left;
+}
+
+.estacao strong {
+  color: #087fa3;
+  font-size: 15px;
+}
+
+.estacao span {
+  color: #718096;
+  font-size: 15px;
+}
+
+.estacao.ativa {
+  background: #e7f6fb;
+  border-color: #087fa3;
+}
+
+/* Seletores de estação e período */
+
+.seletor-estacao,
+.seletor-janela {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.seletor-estacao label,
+.seletor-janela label {
+  color: #102c46;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seletor-estacao select,
+.seletor-janela select {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #102c46;
+  font-size: 14px;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.seletor-estacao select:focus,
+.seletor-janela select:focus {
+  outline: 2px solid #087fa3;
+  outline-offset: 2px;
+}
+
+.aviso-periodo {
+  margin-top: 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Gráficos */
+
+.graficos {
+  margin-top: 32px;
+}
+
+.graficos h2 {
+  color: #102c46;
+  margin-bottom: 12px;
+}
+
+.graficos-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.grafico-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 28px;
+  min-height: 220px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.grafico-card h3 {
+  color: #102c46;
+  margin-bottom: 24px;
+}
+
+.grafico-observacao {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.sem-dados {
+  color: #718096;
+  text-align: center;
+  padding: 35px 0;
+}
+
+/* Barras dos gráficos */
+
+.barras-grafico {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 16px;
+  height: 230px;
+  padding-top: 20px;
+}
+
+.barra-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  gap: 8px;
+}
+
+.barra-valor {
+  font-size: 13px;
+  font-weight: 600;
+  color: #102c46;
+  text-align: center;
+}
+
+.barra-trilha {
+  width: 65%;
+  max-width: 65px;
+  height: 150px;
+  background: #edf2f7;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.barra-nivel {
+  width: 100%;
+  background: #087fa3;
+  border-radius: 8px 8px 0 0;
+}
+
+.barra-chuva {
+  background: #38a3d1;
+}
+
+.barra-horario {
+  font-size: 12px;
+  color: #718096;
+  text-align: center;
+}
+
+/* Responsividade */
+
+@media (max-width: 768px) {
   .cartoes {
     grid-template-columns: 1fr;
   }
 
+  .graficos-container {
+    grid-template-columns: 1fr;
+  }
+
   .cabecalho {
-    align-items: flex-start;
-    gap: 15px;
     flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .seletor-estacao,
+  .seletor-janela {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .seletor-estacao select,
+  .seletor-janela select {
+    width: 100%;
   }
 }
