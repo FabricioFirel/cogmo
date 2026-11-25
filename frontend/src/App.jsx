@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import ListaEstacoes from './components/ListaEstacoes'
 import Graficos from './components/Graficos'
@@ -7,58 +6,86 @@ import SeletorJanela from './components/SeletorJanela'
 import SeletorEstacao from './components/SeletorEstacao'
 import Resumo from './components/Resumo'
 import { IconeEstacao } from './components/Icones'
-import { Vazio } from './components/Estados'
+import { Carregando, Erro, Vazio } from './components/Estados'
 
-import {
-  estacoes,
-  resumoEstacao,
-  serieEstacao,
-  resumoEstacaoSemDados,
-  serieEstacaoSemDados
-} from './data/mockData'
+import { buscarEstacoes, buscarResumo, buscarSerie } from './api'
+import { useApi } from './useApi'
 
 import './App.css'
 
-function App() {
-  const [estacaoSelecionada, setEstacaoSelecionada] = useState(
-    estacoes[0]?.id ?? ''
-  )
+// Busca o resumo de todas as estações só para mostrar a situação na lista.
+// Se alguma falhar, a lista continua funcionando, apenas sem o selo daquela.
+function useSituacoes(estacoes) {
+  const [situacoes, setSituacoes] = useState({})
 
+  useEffect(() => {
+    if (!estacoes?.length) return
+    let ativo = true
+
+    Promise.allSettled(estacoes.map((estacao) => buscarResumo(estacao.id))).then(
+      (resultados) => {
+        if (!ativo) return
+
+        const mapa = {}
+        resultados.forEach((resultado, i) => {
+          if (resultado.status === 'fulfilled') {
+            mapa[estacoes[i].id] = resultado.value.status
+          }
+        })
+        setSituacoes(mapa)
+      },
+    )
+
+    return () => {
+      ativo = false
+    }
+  }, [estacoes])
+
+  return situacoes
+}
+
+function App() {
+  const [estacaoSelecionada, setEstacaoSelecionada] = useState('')
   const [periodoSelecionado, setPeriodoSelecionado] = useState(12)
 
-  const resumos = {
-    'EST-001': resumoEstacao,
-    'EST-005': resumoEstacaoSemDados
-  }
+  const listagem = useApi(buscarEstacoes, [])
+  const estacoes = listagem.dados ?? []
+  const situacoes = useSituacoes(listagem.dados)
 
-  const series = {
-    'EST-001': serieEstacao,
-    'EST-005': serieEstacaoSemDados
-  }
+  // Seleciona a primeira estação assim que a lista chega, para a tela
+  // nunca abrir sem nada selecionado.
+  useEffect(() => {
+    const lista = listagem.dados
+    if (lista?.length && !estacaoSelecionada) {
+      setEstacaoSelecionada(lista[0].id)
+    }
+  }, [listagem.dados, estacaoSelecionada])
 
-  const resumoAtual = resumos[estacaoSelecionada] ?? null
-  const serieAtual = series[estacaoSelecionada] ?? null
+  const resumo = useApi(
+    () =>
+      estacaoSelecionada
+        ? buscarResumo(estacaoSelecionada)
+        : Promise.resolve(null),
+    [estacaoSelecionada],
+  )
 
+  const serie = useApi(
+    () =>
+      estacaoSelecionada
+        ? buscarSerie(estacaoSelecionada, periodoSelecionado)
+        : Promise.resolve(null),
+    [estacaoSelecionada, periodoSelecionado],
+  )
+
+  const resumoAtual = resumo.dados
+  // A API já devolve só a janela pedida, então não precisa filtrar aqui.
+  const leituras = serie.dados?.points ?? []
   const semLeituras = resumoAtual?.status === 'sem_dados'
 
   const estacoesComStatus = estacoes.map((estacao) => ({
     ...estacao,
-    status: resumos[estacao.id]?.status ?? 'sem_dados'
+    status: situacoes[estacao.id] ?? 'sem_dados',
   }))
-
-  // Mostra somente as leituras de exemplo existentes.
-  const leituras = serieAtual?.points?.filter((leitura) => {
-    const horario = new Date(leitura.observed_at).getTime()
-    const fim = new Date(serieAtual.end).getTime()
-
-    if (!Number.isFinite(horario) || !Number.isFinite(fim)) {
-      return false
-    }
-
-    const inicio = fim - periodoSelecionado * 60 * 60 * 1000
-
-    return horario >= inicio && horario <= fim
-  }) ?? []
 
   return (
     <main className="app">
@@ -81,52 +108,77 @@ function App() {
           precipitação das estações.
         </p>
 
-        {/* Quatro cartões no mesmo grupo */}
-        <div className="cartoes">
-          <article className="cartao">
-            <span>
-              <IconeEstacao tamanho={22} cor="#0284a8" />
-              Estações monitoradas
-            </span>
+        {listagem.carregando && (
+          <Carregando texto="Carregando estações…" altura={260} />
+        )}
 
-            <strong>{estacoes.length}</strong>
-          </article>
-
-          <Resumo resumo={resumoAtual} />
-        </div>
-
-        <ListaEstacoes
-          estacoes={estacoesComStatus}
-          estacaoSelecionada={estacaoSelecionada}
-          aoSelecionar={setEstacaoSelecionada}
-        />
-
-        <SeletorEstacao
-          estacoes={estacoes}
-          estacaoSelecionada={estacaoSelecionada}
-          aoSelecionar={setEstacaoSelecionada}
-        />
-
-        <SeletorJanela
-          periodoSelecionado={periodoSelecionado}
-          aoAlterarPeriodo={setPeriodoSelecionado}
-        />
-
-        {semLeituras ? (
-          <Vazio
-            titulo="Sem leituras disponíveis"
-            texto="Esta estação ainda não possui registros de nível do rio ou precipitação."
+        {listagem.erro && (
+          <Erro
+            erro={listagem.erro}
+            aoTentarDeNovo={listagem.tentarDeNovo}
+            titulo="Não foi possível conectar à API"
           />
-        ) : (
-          <>
-            {leituras.length > 0 && (
-              <p className="aviso-periodo">
-                Exibindo apenas as leituras de exemplo disponíveis.
-                O período completo ainda não possui dados.
-              </p>
-            )}
+        )}
 
-            <Graficos leituras={leituras} />
+        {listagem.dados && estacoes.length === 0 && (
+          <Vazio
+            titulo="Nenhuma estação cadastrada"
+            texto="Rode python manage.py load_csv na pasta backend para popular o banco."
+          />
+        )}
+
+        {estacoes.length > 0 && (
+          <>
+            <div className="cartoes">
+              <article className="cartao">
+                <span>
+                  <IconeEstacao tamanho={22} cor="#0284a8" />
+                  Estações monitoradas
+                </span>
+
+                <strong>{estacoes.length}</strong>
+              </article>
+
+              {resumo.carregando ? (
+                <Carregando texto="Carregando resumo…" altura={120} />
+              ) : (
+                <Resumo resumo={resumoAtual} />
+              )}
+            </div>
+
+            <ListaEstacoes
+              estacoes={estacoesComStatus}
+              estacaoSelecionada={estacaoSelecionada}
+              aoSelecionar={setEstacaoSelecionada}
+            />
+
+            <SeletorEstacao
+              estacoes={estacoes}
+              estacaoSelecionada={estacaoSelecionada}
+              aoSelecionar={setEstacaoSelecionada}
+            />
+
+            <SeletorJanela
+              periodoSelecionado={periodoSelecionado}
+              aoAlterarPeriodo={setPeriodoSelecionado}
+            />
+
+            {serie.erro ? (
+              <Erro
+                erro={serie.erro}
+                aoTentarDeNovo={serie.tentarDeNovo}
+                titulo="Não foi possível carregar as leituras"
+              />
+            ) : serie.carregando ? (
+              <Carregando texto="Carregando leituras…" altura={260} />
+            ) : semLeituras || leituras.length === 0 ? (
+              <Vazio
+                titulo="Sem leituras disponíveis"
+                texto="Esta estação ainda não possui registros de nível do rio ou precipitação."
+              />
+            ) : (
+              <Graficos leituras={leituras} />
+            )}
           </>
         )}
       </section>
