@@ -4,7 +4,8 @@ API REST desenvolvida em **Python** com **Django** e **Django REST Framework**, 
 
 O projeto é a nossa adaptação do desafio proposto pela COGMO. O desafio original foi pensado para Node.js e, como estudo, foi reescrito para a stack Python no back-end.
 
-> **Projeto em fase inicial de desenvolvimento.**
+> **Back-end e front-end funcionando de ponta a ponta.** As três rotas da API
+> estão implementadas e documentadas, e o painel React consome os dados reais.
 
 ## Sobre o projeto
 
@@ -69,6 +70,7 @@ Com o servidor rodando:
 ## Pré-requisitos
 
 - [Python 3.12 ou superior](https://www.python.org/downloads/) (desenvolvido com 3.14)
+- [Node.js 20 ou superior](https://nodejs.org/) — para o front-end
 - [Git](https://git-scm.com/)
 
 ## Como rodar o projeto
@@ -106,13 +108,45 @@ Com o servidor rodando:
    python manage.py migrate
    ```
 
-5. Inicie o servidor:
+5. Gere os dados sintéticos e popule o banco:
+
+   ```bash
+   cd ../data
+   python seed.py
+   cd ../backend
+   python manage.py load_csv
+   ```
+
+   Devem ser carregadas 5 estações e 1344 leituras.
+
+6. Inicie a API:
 
    ```bash
    python manage.py runserver
    ```
 
-   A API ficará disponível em `http://127.0.0.1:8000/`.
+   A API fica em `http://127.0.0.1:8000/`.
+
+7. Em **outro terminal**, suba o front-end:
+
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+   O painel fica em `http://localhost:5173/`.
+
+   O Vite repassa as chamadas `/api` para o Django, então os dois precisam
+   estar rodando ao mesmo tempo. Para usar outra porta no back-end, crie
+   `frontend/.env.local` com `API_PROXY_TARGET=http://127.0.0.1:8001`.
+
+## Documentação
+
+| Arquivo | Conteúdo |
+|---|---|
+| [`docs/api.md`](docs/api.md) | Detalhamento das rotas e dos parâmetros |
+| [`docs/modelo-de-dados.md`](docs/modelo-de-dados.md) | Modelo de dados (MER e DER) |
 
 ## Comandos úteis
 
@@ -122,14 +156,18 @@ Com o servidor rodando:
 | `python manage.py makemigrations` | Gera migrações após alterar os models |
 | `python manage.py migrate` | Aplica as migrações no banco |
 | `python manage.py runserver` | Inicia o servidor de desenvolvimento |
+| `python manage.py load_csv` | Carrega os CSVs da pasta `data/` no banco |
+| `python manage.py load_csv --clear` | Apaga os dados antes de carregar |
+| `python manage.py test` | Roda os testes da API |
+| `npm run dev` | Inicia o front-end (dentro de `frontend/`) |
 
 ## Entregáveis do desafio
 
-- [ ] Código-fonte organizado em pastas limpas
-- [ ] Script Python gerador do `observations.csv`
-- [ ] Arquivo de dependências (`requirements.txt`) e scripts de migração
-- [ ] Documentação da API (Swagger/Redoc) e do modelo de dados (MER e DER)
-- [ ] README detalhado
+- [x] Código-fonte organizado em pastas limpas
+- [x] Script Python gerador do `observations.csv`
+- [x] Arquivo de dependências (`requirements.txt`) e scripts de migração
+- [x] Documentação da API (Swagger/Redoc) e do modelo de dados (MER e DER)
+- [x] README detalhado
 
 ## Repositório
 
