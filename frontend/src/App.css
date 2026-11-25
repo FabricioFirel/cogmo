@@ -188,104 +188,87 @@
 
 .graficos h2 {
   color: #102c46;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
+.graficos > p {
+  color: #64748b;
+  margin: 0;
+}
+
+/* Um gráfico por linha: a série horária precisa da largura toda para respirar. */
 .graficos-container {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 20px;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .grafico-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 28px;
-  min-height: 220px;
+  padding: 24px 20px 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-.grafico-card h3 {
+.grafico-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.grafico-topo h3 {
   color: #102c46;
-  margin-bottom: 24px;
+  margin: 0;
+  font-size: 17px;
+}
+
+.grafico-unidade {
+  color: #64748b;
+  font-size: 13px;
 }
 
 .grafico-observacao {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
+  margin: 14px 0 0;
 }
 
 .sem-dados {
   color: #718096;
   text-align: center;
-  padding: 35px 0;
+  padding: 48px 0;
 }
 
-/* Barras dos gráficos */
+/* Caixa que aparece ao passar o cursor sobre o gráfico */
 
-.barras-grafico {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  gap: 16px;
-  height: 230px;
-  padding-top: 20px;
+.dica-grafico {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 14px rgba(16, 44, 70, 0.12);
 }
 
-.barra-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  gap: 8px;
+.dica-hora {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
 }
 
-.barra-valor {
-  font-size: 13px;
+.dica-valor {
+  margin: 2px 0 0;
+  font-size: 15px;
   font-weight: 600;
   color: #102c46;
-  text-align: center;
-}
-
-.barra-trilha {
-  width: 65%;
-  max-width: 65px;
-  height: 150px;
-  background: #edf2f7;
-  border-radius: 8px 8px 0 0;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-}
-
-.barra-nivel {
-  width: 100%;
-  background: #087fa3;
-  border-radius: 8px 8px 0 0;
-}
-
-.barra-chuva {
-  background: #38a3d1;
-}
-
-.barra-horario {
-  font-size: 12px;
-  color: #718096;
-  text-align: center;
 }
 
 /* Responsividade */
 
 @media (max-width: 768px) {
   .cartoes {
-    grid-template-columns: 1fr;
-  }
-
-  .graficos-container {
     grid-template-columns: 1fr;
   }
 

@@ -177,7 +177,10 @@ function App() {
                 texto="Esta estação ainda não possui registros de nível do rio ou precipitação."
               />
             ) : (
-              <Graficos leituras={leituras} />
+              <Graficos
+                leituras={leituras}
+                nivelAlerta={resumoAtual?.station?.alert_level_m ?? null}
+              />
             )}
           </>
         )}
