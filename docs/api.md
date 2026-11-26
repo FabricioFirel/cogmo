@@ -4,8 +4,6 @@ Base: `http://127.0.0.1:8000/api`. Todas as datas são **UTC**, no formato ISO 8
 (ex.: `2026-11-03T18:00:00Z`). A documentação interativa fica em `/api/docs/` (Swagger) e
 `/api/redoc/` (Redoc).
 
-As três rotas de dados incluem o cabeçalho `X-Data-Source: synthetic`, inclusive nas respostas de erro dessas rotas. As respostas de sucesso também indicam `"simulated": true` no JSON. A listagem indica esse campo em cada estação.
-
 ## GET /api/stations
 
 Lista as estações, em ordem de código.
@@ -14,11 +12,13 @@ Lista as estações, em ordem de código.
 [
   {
     "id": "EST-001",
-    "simulated": true,
     "name": "Ponte Velha",
     "river": "Rio Aurora",
     "city": "Vale Verde",
     "state": "MG",
+    "latitude": -19.912,
+    "longitude": -43.941,
+    "alert_level_m": 4.5,
     "last_observation_at": "2026-11-03T18:00:00Z"
   }
 ]
@@ -32,20 +32,26 @@ Resumo das últimas leituras. Se a leitura mais recente de uma métrica for inv�
 
 ```json
 {
-  "simulated": true,
   "station": { "...": "mesmos campos de /stations" },
   "last_observation_at": "2026-11-03T18:00:00Z",
   "level_m": { "value": 2.56, "observed_at": "2026-11-03T17:00:00Z" },
-  "rain_mm_h": { "value": 0.0, "observed_at": "2026-11-03T18:00:00Z" }
+  "rain_mm_h": { "value": 0.0, "observed_at": "2026-11-03T18:00:00Z" },
+  "rain_24h_mm": 1.1,
+  "level_trend": "descendo",
+  "status": "normal",
+  "invalid_readings_24h": 1
 }
 ```
+
+- `level_trend`: `subindo`, `descendo` ou `estavel` (compara com 3 horas antes; variação maior que 5 cm).
+- `status`: `normal`, `atencao` (a partir de 80% do nível de alerta), `alerta` (acima do nível de alerta) ou `sem_dados`.
 
 ## GET /api/stations/{id}/series
 
 | parâmetro | valores | padrão |
 |---|---|---|
 | `hours` | inteiro de **1 a 72** | 24 |
-| `metric` | `all`, `level`, `rain` (também aceita `level_m` e `rain_mm_h`) | `all` |
+| `metric` | `all`, `level_m`, `rain_mm_h` | `all` |
 | `order` | `asc` (mais antiga primeiro) ou `desc` | `asc` |
 
 A janela termina na **última leitura da estação** e volta `hours` horas (como os dados são
@@ -53,7 +59,6 @@ sintéticos, isso evita série vazia só porque o seed foi rodado em outro dia).
 
 ```json
 {
-  "simulated": true,
   "station_id": "EST-001",
   "hours": 24,
   "metric": "all",
@@ -68,9 +73,7 @@ sintéticos, isso evita série vazia só porque o seed foi rodado em outro dia).
 }
 ```
 
-- `metric=level` retorna `level_m` em metros. `metric=rain` retorna `rain_mm_h` em milímetros por hora.
 - Leitura inválida vem como `null` no ponto, sem remover a hora da série.
-- Quando nenhuma métrica tem registro em um horário, a API não cria um ponto.
 - Estação sem leituras: `200` com `"points": []`.
 
 ## Erros

@@ -4,18 +4,19 @@ from .models import Station
 
 
 class StationSerializer(serializers.ModelSerializer):
-    simulated = serializers.BooleanField(default=True, read_only=True)
     last_observation_at = serializers.DateTimeField(read_only=True, allow_null=True)
 
     class Meta:
         model = Station
         fields = [
             "id",
-            "simulated",
             "name",
             "river",
             "city",
             "state",
+            "latitude",
+            "longitude",
+            "alert_level_m",
             "last_observation_at",
         ]
 
@@ -26,11 +27,16 @@ class ReadingSerializer(serializers.Serializer):
 
 
 class SummarySerializer(serializers.Serializer):
-    simulated = serializers.BooleanField(default=True, read_only=True)
     station = StationSerializer()
     last_observation_at = serializers.DateTimeField(allow_null=True)
     level_m = ReadingSerializer()
     rain_mm_h = ReadingSerializer()
+    rain_24h_mm = serializers.FloatField(allow_null=True)
+    level_trend = serializers.ChoiceField(
+        choices=["subindo", "descendo", "estavel"], allow_null=True
+    )
+    status = serializers.ChoiceField(choices=["normal", "atencao", "alerta", "sem_dados"])
+    invalid_readings_24h = serializers.IntegerField()
 
 
 class SeriesPointSerializer(serializers.Serializer):
@@ -40,7 +46,6 @@ class SeriesPointSerializer(serializers.Serializer):
 
 
 class SeriesSerializer(serializers.Serializer):
-    simulated = serializers.BooleanField(default=True, read_only=True)
     station_id = serializers.CharField()
     hours = serializers.IntegerField()
     metric = serializers.CharField()
@@ -58,7 +63,7 @@ class SeriesQuerySerializer(serializers.Serializer):
         min_value=1, max_value=72, default=24, help_text="Janela em horas (1 a 72)"
     )
     metric = serializers.ChoiceField(
-        choices=["all", "level", "rain", "level_m", "rain_mm_h"],
+        choices=["all", "level_m", "rain_mm_h"],
         default="all",
         help_text="Qual métrica devolver",
     )
