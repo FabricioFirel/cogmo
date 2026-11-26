@@ -10,7 +10,7 @@ export function useApi(funcao, dependencias = []) {
     let ativo = true
     setEstado((anterior) => ({ ...anterior, carregando: true, erro: null }))
 
-    funcao()
+    funcao(tentativa)
       .then((dados) => ativo && setEstado({ carregando: false, erro: null, dados }))
       .catch((erro) => ativo && setEstado({ carregando: false, erro, dados: null }))
 
