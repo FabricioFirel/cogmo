@@ -26,12 +26,16 @@ from pathlib import Path
 
 PASTA = Path(__file__).resolve().parent
 
+# Estações fictícias. A última não tem leituras, para testar a "série vazia" no front.
 ESTACOES = [
     # id, nome, rio, município, UF, latitude, longitude, nível base (m), nível de alerta (m)
     ("EST-001", "Ponte Velha", "Rio Aurora", "Vale Verde", "MG", -19.912, -43.941, 2.10, 4.50),
     ("EST-002", "Cachoeira Alta", "Rio Aurora", "Serra Azul", "MG", -20.105, -44.002, 1.60, 3.80),
     ("EST-003", "Porto do Sol", "Rio Jaguará", "Campo Belo", "SP", -22.530, -47.110, 3.40, 6.00),
+    ("EST-004", "Barra Mansa", "Rio Jaguará", "Lagoa Funda", "SP", -22.702, -47.380, 2.80, 5.20),
+    ("EST-005", "Estação Nova", "Rio Cristal", "Pedra Branca", "PR", -25.430, -49.270, 1.20, 3.00),
 ]
+ESTACAO_SEM_DADOS = "EST-005"
 
 # Valores "estragados" que o gerador mistura de propósito nos dados,
 # para que a carga e a API precisem tratar métricas inválidas.
@@ -110,6 +114,8 @@ def main():
         escritor = csv.writer(arquivo)
         escritor.writerow(["station_id", "observed_at", "metric", "value"])
         for est in ESTACOES:
+            if est[0] == ESTACAO_SEM_DADOS:
+                continue
             chuva = gerar_chuva(rng, horas)
             nivel = gerar_nivel(rng, chuva, est[7])
             for i in range(horas):

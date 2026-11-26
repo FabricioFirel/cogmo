@@ -33,14 +33,7 @@ def ultima_valida(estacao, metrica, ate):
     )
 
 
-class SimulatedDataView(APIView):
-    def finalize_response(self, request, response, *args, **kwargs):
-        response = super().finalize_response(request, response, *args, **kwargs)
-        response["X-Data-Source"] = "synthetic"
-        return response
-
-
-class StationListView(SimulatedDataView):
+class StationListView(APIView):
     @extend_schema(
         summary="Lista as estações",
         responses=StationSerializer(many=True),
@@ -51,7 +44,7 @@ class StationListView(SimulatedDataView):
         return Response(StationSerializer(estacoes, many=True).data)
 
 
-class StationSummaryView(SimulatedDataView):
+class StationSummaryView(APIView):
     @extend_schema(
         summary="Resumo das últimas leituras da estação",
         responses=SummarySerializer,
@@ -60,23 +53,76 @@ class StationSummaryView(SimulatedDataView):
     def get(self, request, station_id):
         estacao = get_object_or_404(estacoes_com_ultima_leitura(), pk=station_id)
         fim = estacao.last_observation_at
+        vazio = {"value": None, "observed_at": None}
 
-        def leitura(metrica):
-            observacao = ultima_valida(estacao, metrica, fim) if fim else None
-            if observacao is None:
-                return {"value": None, "observed_at": None}
-            return {"value": observacao.value, "observed_at": observacao.observed_at}
+        if fim is None:
+            return Response(
+                SummarySerializer(
+                    {
+                        "station": estacao,
+                        "last_observation_at": None,
+                        "level_m": vazio,
+                        "rain_mm_h": vazio,
+                        "rain_24h_mm": None,
+                        "level_trend": None,
+                        "status": "sem_dados",
+                        "invalid_readings_24h": 0,
+                    }
+                ).data
+            )
+
+        nivel = ultima_valida(estacao, LEVEL, fim)
+        chuva = ultima_valida(estacao, RAIN, fim)
+
+        inicio_24h = fim - timedelta(hours=23)
+        ultimas_24h = Observation.objects.filter(
+            station=estacao, observed_at__gte=inicio_24h, observed_at__lte=fim
+        )
+        chuvas = list(
+            ultimas_24h.filter(metric=RAIN, value__isnull=False).values_list("value", flat=True)
+        )
+        chuva_24h = round(sum(chuvas), 1) if chuvas else None
+        invalidas = ultimas_24h.filter(value__isnull=True).count()
+
+        # Tendência: compara o nível atual com o de 3 horas antes.
+        tendencia = None
+        if nivel:
+            anterior = ultima_valida(estacao, LEVEL, nivel.observed_at - timedelta(hours=3))
+            if anterior:
+                diferenca = nivel.value - anterior.value
+                if diferenca > 0.05:
+                    tendencia = "subindo"
+                elif diferenca < -0.05:
+                    tendencia = "descendo"
+                else:
+                    tendencia = "estavel"
+
+        status = "sem_dados"
+        if nivel:
+            status = "normal"
+            if estacao.alert_level_m:
+                if nivel.value >= estacao.alert_level_m:
+                    status = "alerta"
+                elif nivel.value >= estacao.alert_level_m * 0.8:
+                    status = "atencao"
+
+        def leitura(obs):
+            return {"value": obs.value, "observed_at": obs.observed_at} if obs else vazio
 
         dados = {
             "station": estacao,
-            "last_observation_at": estacao.last_observation_at,
-            "level_m": leitura(LEVEL),
-            "rain_mm_h": leitura(RAIN),
+            "last_observation_at": fim,
+            "level_m": leitura(nivel),
+            "rain_mm_h": leitura(chuva),
+            "rain_24h_mm": chuva_24h,
+            "level_trend": tendencia,
+            "status": status,
+            "invalid_readings_24h": invalidas,
         }
         return Response(SummarySerializer(dados).data)
 
 
-class StationSeriesView(SimulatedDataView):
+class StationSeriesView(APIView):
     @extend_schema(
         summary="Série histórica da estação (janela de 1 a 72 horas)",
         description=(
@@ -85,7 +131,7 @@ class StationSeriesView(SimulatedDataView):
         ),
         parameters=[
             OpenApiParameter("hours", int, description="1 a 72 (padrão 24)"),
-            OpenApiParameter("metric", str, enum=["all", "level", "rain", "level_m", "rain_mm_h"]),
+            OpenApiParameter("metric", str, enum=["all", "level_m", "rain_mm_h"]),
             OpenApiParameter("order", str, enum=["asc", "desc"]),
         ],
         responses=SeriesSerializer,
@@ -96,8 +142,7 @@ class StationSeriesView(SimulatedDataView):
         consulta = SeriesQuerySerializer(data=request.query_params)
         consulta.is_valid(raise_exception=True)
         horas = consulta.validated_data["hours"]
-        filtro = consulta.validated_data["metric"]
-        metrica = {"level": LEVEL, "rain": RAIN}.get(filtro, filtro)
+        metrica = consulta.validated_data["metric"]
         ordem = consulta.validated_data["order"]
 
         fim = estacao.last_observation_at
@@ -122,7 +167,7 @@ class StationSeriesView(SimulatedDataView):
         dados = {
             "station_id": estacao.id,
             "hours": horas,
-            "metric": filtro,
+            "metric": metrica,
             "order": ordem,
             "start": inicio,
             "end": fim,

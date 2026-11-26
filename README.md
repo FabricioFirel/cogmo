@@ -5,7 +5,7 @@ API REST desenvolvida em **Python** com **Django** e **Django REST Framework**, 
 O projeto é a nossa adaptação do desafio proposto pela COGMO. O desafio original foi pensado para Node.js e, como estudo, foi reescrito para a stack Python no back-end.
 
 > **Back-end e front-end funcionando de ponta a ponta.** As três rotas da API
-> estão implementadas e documentadas, e o painel React consulta os dados sintéticos da API.
+> estão implementadas e documentadas, e o painel React consome os dados reais.
 
 ## Sobre o projeto
 
@@ -105,22 +105,24 @@ Com o servidor rodando:
 4. Aplique as migrações do banco de dados:
 
    ```bash
-   python backend/manage.py migrate
+   python manage.py migrate
    ```
 
 5. Gere os dados sintéticos e popule o banco:
 
    ```bash
-   python data/seed.py
-   python backend/manage.py load_csv
+   cd ../data
+   python seed.py
+   cd ../backend
+   python manage.py load_csv
    ```
 
-   Devem ser carregadas 3 estações e 1008 leituras.
+   Devem ser carregadas 5 estações e 1344 leituras.
 
 6. Inicie a API:
 
    ```bash
-   python backend/manage.py runserver
+   python manage.py runserver
    ```
 
    A API fica em `http://127.0.0.1:8000/`.
@@ -129,7 +131,7 @@ Com o servidor rodando:
 
    ```bash
    cd frontend
-   npm ci
+   npm install
    npm run dev
    ```
 
@@ -138,8 +140,6 @@ Com o servidor rodando:
    O Vite repassa as chamadas `/api` para o Django, então os dois precisam
    estar rodando ao mesmo tempo. Para usar outra porta no back-end, crie
    `frontend/.env.local` com `API_PROXY_TARGET=http://127.0.0.1:8001`.
-
-O painel também pode rodar sem o Django, com quatro cenários de demonstração. Veja o [guia do frontend](frontend/README.md).
 
 ## Documentação
 
