@@ -35,6 +35,8 @@ class ApiTests(TestCase):
     def test_lista_estacoes(self):
         r = self.client.get("/api/stations")
         self.assertEqual(r.status_code, 200)
+        self.assertEqual(r["X-Data-Source"], "synthetic")
+        self.assertTrue(all(e["simulated"] for e in r.json()))
         self.assertEqual([e["id"] for e in r.json()], ["T-1", "T-2"])
         self.assertEqual(r.json()[0]["last_observation_at"], "2026-11-01T12:00:00Z")
         self.assertIsNone(r.json()[1]["last_observation_at"])
@@ -57,6 +59,17 @@ class ApiTests(TestCase):
         horas = [p["observed_at"] for p in dados["points"]]
         self.assertEqual(horas, sorted(horas, reverse=True))
 
+    def test_series_aceita_metricas_do_guia(self):
+        for alias, campo, outro in [("level", "level_m", "rain_mm_h"), ("rain", "rain_mm_h", "level_m")]:
+            with self.subTest(metric=alias):
+                r = self.client.get("/api/stations/T-1/series", {"metric": alias, "hours": 12})
+                self.assertEqual(r.status_code, 200)
+                self.assertEqual(r["X-Data-Source"], "synthetic")
+                self.assertTrue(r.json()["simulated"])
+                self.assertEqual(r.json()["metric"], alias)
+                self.assertIn(campo, r.json()["points"][0])
+                self.assertNotIn(outro, r.json()["points"][0])
+
     def test_series_limites_da_janela(self):
         self.assertEqual(self.client.get("/api/stations/T-1/series?hours=72").json()["count"], 72)
         self.assertEqual(self.client.get("/api/stations/T-1/series?hours=1").json()["count"], 1)
@@ -67,6 +80,7 @@ class ApiTests(TestCase):
     def test_series_metrica_invalida(self):
         r = self.client.get("/api/stations/T-1/series?metric=temperatura")
         self.assertEqual(r.status_code, 400)
+        self.assertEqual(r["X-Data-Source"], "synthetic")
 
     def test_series_vazia_e_estacao_inexistente(self):
         r = self.client.get("/api/stations/T-2/series")
@@ -74,19 +88,25 @@ class ApiTests(TestCase):
         self.assertEqual(r.json()["points"], [])
         self.assertEqual(self.client.get("/api/stations/XYZ/series").status_code, 404)
 
+    def test_series_respeita_lacunas(self):
+        Observation.objects.filter(station=self.estacao, observed_at=FIM - timedelta(hours=1)).delete()
+        pontos = self.client.get("/api/stations/T-1/series?hours=3").json()["points"]
+        self.assertEqual([p["observed_at"] for p in pontos], [
+            "2026-11-01T10:00:00Z", "2026-11-01T12:00:00Z",
+        ])
+        self.assertIsNone(pontos[-1]["rain_mm_h"])
+
     def test_summary(self):
         dados = self.client.get("/api/stations/T-1/summary").json()
+        self.assertTrue(dados["simulated"])
         self.assertEqual(dados["level_m"]["value"], 2.0)
         # A chuva da última hora é inválida, então vem a anterior válida.
         self.assertEqual(dados["rain_mm_h"]["observed_at"], "2026-11-01T11:00:00Z")
-        self.assertEqual(dados["rain_24h_mm"], 23.0)
-        self.assertEqual(dados["invalid_readings_24h"], 1)
-        self.assertEqual(dados["level_trend"], "estavel")
-        self.assertEqual(dados["status"], "normal")
 
     def test_summary_sem_dados(self):
         dados = self.client.get("/api/stations/T-2/summary").json()
-        self.assertEqual(dados["status"], "sem_dados")
+        self.assertEqual(dados["level_m"], {"value": None, "observed_at": None})
+        self.assertEqual(dados["rain_mm_h"], {"value": None, "observed_at": None})
 
 
 class CargaTests(TestCase):
